@@ -78,3 +78,6 @@ async def custom_404_handler(request: Request, exc: StarletteHTTPException):
 
 # 여기에서부터 과제 코드를 작성해주세요.
 # 1단계
+@app.get("/hello/{name}", response_class=HTMLResponse)
+def get_page(request: Request, name: str):
+    return templates.TemplateResponse("hello.html", {"request": request, "name": name})
