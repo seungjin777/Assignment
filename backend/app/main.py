@@ -81,3 +81,18 @@ async def custom_404_handler(request: Request, exc: StarletteHTTPException):
 @app.get("/hello/{name}", response_class=HTMLResponse)
 def get_page(request: Request, name: str):
     return templates.TemplateResponse("hello.html", {"request": request, "name": name})
+
+# 2단계
+# user.json파일에서 데이터를 받아와 user.html로 넘겨주는 코드를 작성해야함
+@app.get("/users", response_class=JSONResponse)
+def get_users(request: Request):
+    with open('./data/users.json') as file:  # users.json파일 불러옴
+      users = json.load(file)
+    return templates.TemplateResponse("users.html", {"request": request, "users": users})
+
+@app.get("/products", response_class=JSONResponse)
+def get_products(request: Request):
+    with open('./data/products.json') as file:  # products.json파일 불러옴
+        products = json.load(file)
+    return templates.TemplateResponse("products.html", {"request": request, "products": products})
+

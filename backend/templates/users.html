@@ -12,6 +12,10 @@
     <h1>사용자 목록</h1>
     <!-- 사용자 리스트를 여기에 출력 -->
     {# 예시: {% for user in users %} <li>{{ user.name }}</li> {% endfor %} #}
+    {% for user in users %} 
+    <li>{{ user.name }}</li> 
+    {% endfor %}
+    
     <a href="/">메인으로</a>
 </body>
 </html>

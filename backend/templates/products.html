@@ -12,6 +12,11 @@
     <h1>상품 목록</h1>
     <!-- 상품 리스트를 여기에 출력 -->
     {# 예시: {% for product in products %} <li>{{ product.name }}</li> {% endfor %} #}
+
+    {% for product in products %} 
+    <li>{{ product.name }}</li> 
+    {% endfor %}
+    
     <a href="/">메인으로</a>
 </body>
 </html>
