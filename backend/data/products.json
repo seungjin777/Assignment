@@ -1,5 +1,27 @@
 [
-  {"id": 101, "name": "Keyboard", "price": 30000},
-  {"id": 102, "name": "Mouse", "price": 15000},
-  {"id": 103, "name": "Monitor", "price": 200000}
+    {
+        "id": 101,
+        "name": "Keyboard",
+        "price": 30000
+    },
+    {
+        "id": 102,
+        "name": "Mouse",
+        "price": 15000
+    },
+    {
+        "id": 103,
+        "name": "Monitor",
+        "price": 200000
+    },
+    {
+        "id": 104,
+        "name": "강승진",
+        "price": "10000"
+    },
+    {
+        "id": 105,
+        "name": "ㅁㄴㅇㅁ",
+        "price": "10000"
+    }
 ]

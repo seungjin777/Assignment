@@ -1,6 +1,6 @@
 # 이 아래의 코드는 파이썬에서 fastapi를 사용하기 위해 필요한 모듈들을 가져오는 코드입니다.
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 import json
@@ -108,13 +108,11 @@ def get_purchases(request: Request):
     purchases = load_mock_data("purchases.json")
     products = load_mock_data("products.json")
     users = load_mock_data("users.json")
-    
-    # 조합할 데이터 복제
-    purchases_summary = purchases
-    
+
+    purchases_summary = purchases   # 조합할 데이터 복제
     # purchases에서 user_id와 일치하는 user데이터 삽입
     # purchases에서 id와 일치하는 product데이터 삽입
-    # o(n^2) 이게 맞나? 예외 처리도 없음
+    # o(n^2) 이게 맞나? 예외 처리도 필요할듯
     for idx, purchase in enumerate(purchases_summary, start=0):
         for user in users:
             if(user.get('id', None) == purchase['user_id']):
@@ -124,5 +122,50 @@ def get_purchases(request: Request):
             if(product.get('id', None) == purchase['product_id']):
                 purchases_summary[idx]['product_name'] = product['name']
                 purchases_summary[idx]['product_price'] = product['price']
-   
     return templates.TemplateResponse("summary.html", {"request": request, "purchases": purchases_summary})
+
+
+# 4단계
+# get
+@app.get("/user_create", response_class=HTMLResponse)
+def get_userCreate(request: Request):
+    return templates.TemplateResponse("user_create.html", {"request": request})
+
+@app.get("/product_create", response_class=HTMLResponse)
+def get_productCreate(request: Request):
+    return templates.TemplateResponse("product_create.html", {"request": request})
+
+@app.get("/purchase_create", response_class=HTMLResponse)
+def purchaseCreate(request: Request):
+    return templates.TemplateResponse("purchase_create.html", {"request": request})
+
+#post
+@app.post("/users")
+def create_user(name: str = Form(), email: str = Form()):    
+    userForm =load_mock_data("users.json")              # 기존 데이터 받아옴
+    idx =  userForm[len(userForm)-1]['id'] + 1    # 기존 데이터 길이 + 1 
+    # -----> 잘못된 방법일듯 id값이 정렬되지 않은 경우 or 각 id값이 index와 일치하지 않는 경우 문제 발생
+    newRow = {'id': idx, 'name': name, 'email': email}  # 새로 삽입할 데이터 생성
+    userForm.append(newRow)                             # 기존 데이터에 새데이터 추가
+    save_mock_data("users.json", userForm)              # 저장
+    return "post Success" 
+
+@app.post("/products")
+def create_products(name: str = Form(), price: str = Form()):
+    productForm =load_mock_data("products.json") 
+    idx = productForm[len(productForm)-1]['id'] + 1
+    newRow = {'id': idx, 'name': name, 'price': price}
+    productForm.append(newRow)
+    save_mock_data("products.json", productForm)
+    return "post Success"
+
+@app.post("/purchases")
+def create_products(user_id: int = Form(), product_id: int = Form(), date: str = Form()):
+    purchaseForm =load_mock_data("purchases.json") 
+    idx = purchaseForm[len(purchaseForm)-1]['id'] + 1
+    newRow = {'id': idx, 'user_id': user_id, 'product_id': product_id, 'date': date}
+    purchaseForm.append(newRow)
+    save_mock_data("purchases.json", purchaseForm)
+    return "post Success"
+
+
