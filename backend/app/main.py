@@ -1,6 +1,6 @@
 # 이 아래의 코드는 파이썬에서 fastapi를 사용하기 위해 필요한 모듈들을 가져오는 코드입니다.
 
-from fastapi import FastAPI, Request, Form
+from fastapi import FastAPI, Request, Response, Form
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 import json
@@ -115,7 +115,7 @@ async def custom_404_handler(request: Request, exc: StarletteHTTPException):
 # 여기에서부터 과제 코드를 작성해주세요.
 # 1단계--------------------------------------------------------------------------------
 @app.get("/hello/{name}", response_class=HTMLResponse)
-def get_page(request: Request, name: str):
+def get_hello(request: Request, name: str):
     return templates.TemplateResponse("hello.html", {"request": request, "name": name})
 
 
@@ -123,14 +123,12 @@ def get_page(request: Request, name: str):
 # user.json파일에서 데이터를 받아와 user.html로 넘겨주는 코드를 작성해야함
 @app.get("/users", response_class=JSONResponse)
 def get_users(request: Request):
-    with open('./data/users.json') as file:  # users.json파일 불러옴
-        users = json.load(file)
+    users = load_mock_data("users.json")
     return templates.TemplateResponse("users.html", {"request": request, "users": users})
 
 @app.get("/products", response_class=JSONResponse)
 def get_products(request: Request):
-    with open('./data/products.json') as file:  # products.json파일 불러옴
-        products = json.load(file)
+    products = load_mock_data("products.json")
     return templates.TemplateResponse("products.html", {"request": request, "products": products})
 
 
@@ -138,7 +136,7 @@ def get_products(request: Request):
 # join 필요(불가능)?, purchases에서 id, user_id로 각각 데이터 추출
 # 이미 작성된 데이터 추출 함수가 있었음
 @app.get("/summary", response_class=JSONResponse)
-def get_purchases(request: Request):
+def get_summary(request: Request):
     
     # 조합할 데이터 준비
     purchases = load_mock_data("purchases.json")
@@ -265,3 +263,38 @@ def put_delete_product(request: Request, id: int, user_id: int = Form(None),
         return new_delete_mock_data_item("purchases.json", id) # 삭제
     else:
         return "method Error!"
+    
+    
+# 6단계--------------------------------------------------------------------------------
+# 세션? 일단 쿠키로
+@app.get("/login", response_class=HTMLResponse)
+def get_login(request: Request):
+    
+    if(request.cookies.get("username") != None and          
+       request.cookies.get("password") != None): 
+        # 쿠키가 이미 존재하면 로그아웃 페이지로
+        return templates.TemplateResponse("logout.html", {"request": request, "username": request.cookies.get("username")})
+    else:
+        # 쿠키 없으면 로그인 페이지로
+        return templates.TemplateResponse("login.html", {"request": request}) 
+    
+@app.post("/login")
+def login(request: Request, response: Response, 
+          username: str = Form(), password: str = Form()):
+    
+    users = load_mock_data("users.json")
+    for user in users:
+        if(user["name"] == username and user["email"] == password): # 로그인 성공
+            response = templates.TemplateResponse("logout.html", {"request": request, "username": username})
+            response.set_cookie(key="username", value=username, httponly=True, secure=True)             # 로그인 정보 쿠키 생성
+            response.set_cookie(key="password", value=password, httponly=True, secure=True)
+            return response
+    print("로그인 실패")
+    return templates.TemplateResponse("login.html", {"request": request})
+
+@app.get("/logout")
+def logout(request: Request,  response: Response):
+    response = templates.TemplateResponse("logout.html", {"request": request})      # 로그인 정보 쿠키 삭제
+    response.delete_cookie(key="username")
+    response.delete_cookie(key="password")
+    return response                  
