@@ -9,12 +9,12 @@
 </head>
 <body>
     <h1>사용자 수정</h1>
-    <form method="post" action="/users/{{ user.id }}?_method=put">
+    <form id="putForm" method="post" action="/users/{{ user.id }}?_method=put">
         <input type="text" name="name" value="{{ user.name }}" required>
         <input type="email" name="email" value="{{ user.email }}" required>
         <button type="submit">수정</button>
     </form>
-    <form method="post" action="/users/{{ user.id }}?_method=delete" style="margin-top:10px;">
+    <form id="deleteFrom" method="post" action="/users/{{ user.id }}?_method=delete" style="margin-top:10px;">
         <button type="submit" style="color:red;">삭제</button>
     </form>
     <a href="/">메인으로</a>

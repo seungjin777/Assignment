@@ -39,10 +39,22 @@ def create_mock_data_item(filename, item_id, item_data):
     save_mock_data(filename, data)
     return True
 
+def new_create_mock_data_item(filename, item_id, item_data):
+    # 방법이 정확하지 않아 따로 수정하지 않음
+    return
+
+# ------------------------------------------------------------------    
 def get_mock_data_item(filename, item_id):
     data = load_mock_data(filename)
     return data.get(item_id, None)  # ID가 없으면 None 반환 
 
+def new_get_mock_data_item(filename, item_id):
+    datas = load_mock_data(filename)
+    for data in datas:
+        if data['id'] == item_id:
+            return data
+    return None
+# ------------------------------------------------------------------    
 def delete_mock_data_item(filename, item_id):
     data = load_mock_data(filename)
     if item_id in data:
@@ -51,6 +63,18 @@ def delete_mock_data_item(filename, item_id):
         return True
     return False
 
+def new_delete_mock_data_item(filename, item_id):
+    datas = load_mock_data(filename)              
+    for idx, data in enumerate(datas, start=0):     
+        if data["id"] == item_id:                 # 기존 데이터 존재 확인
+            del datas[idx]
+            break
+        else:
+            return "delete fail"            
+    save_mock_data(filename, datas) # 저장
+    return "delete Success"
+
+# ------------------------------------------------------------------    
 def update_mock_data_item(filename, item_id, new_data):
     data = load_mock_data(filename)
     if item_id in data:
@@ -58,6 +82,18 @@ def update_mock_data_item(filename, item_id, new_data):
         save_mock_data(filename, data)
         return True
     return False  
+
+def new_update_mock_data_item(filename, item_id, newRow):
+    datas = load_mock_data(filename)              
+    for idx, data in enumerate(datas, start=0):     
+        if data["id"] == item_id:                 # 기존 데이터 존재 확인
+            datas[idx] = newRow
+            break
+        else:
+            return "put fail"            
+    save_mock_data(filename, datas) # 저장
+    return "put Success"
+# ------------------------------------------------------------------    
 
 @app.get("/", response_class=HTMLResponse)
 def read_root(request: Request):
@@ -77,13 +113,13 @@ async def custom_404_handler(request: Request, exc: StarletteHTTPException):
 
 
 # 여기에서부터 과제 코드를 작성해주세요.
-# 1단계
+# 1단계--------------------------------------------------------------------------------
 @app.get("/hello/{name}", response_class=HTMLResponse)
 def get_page(request: Request, name: str):
     return templates.TemplateResponse("hello.html", {"request": request, "name": name})
 
 
-# 2단계
+# 2단계--------------------------------------------------------------------------------
 # user.json파일에서 데이터를 받아와 user.html로 넘겨주는 코드를 작성해야함
 @app.get("/users", response_class=JSONResponse)
 def get_users(request: Request):
@@ -98,7 +134,7 @@ def get_products(request: Request):
     return templates.TemplateResponse("products.html", {"request": request, "products": products})
 
 
-# 3단계
+# 3단계--------------------------------------------------------------------------------
 # join 필요(불가능)?, purchases에서 id, user_id로 각각 데이터 추출
 # 이미 작성된 데이터 추출 함수가 있었음
 @app.get("/summary", response_class=JSONResponse)
@@ -125,7 +161,7 @@ def get_purchases(request: Request):
     return templates.TemplateResponse("summary.html", {"request": request, "purchases": purchases_summary})
 
 
-# 4단계
+# 4단계--------------------------------------------------------------------------------
 # get
 @app.get("/user_create", response_class=HTMLResponse)
 def get_userCreate(request: Request):
@@ -169,3 +205,63 @@ def create_products(user_id: int = Form(), product_id: int = Form(), date: str =
     return "post Success"
 
 
+# 5단계--------------------------------------------------------------------------------
+# get
+@app.get("/user_edit/{id}", response_class=HTMLResponse)
+def get_userEdit(request: Request, id: int):
+    # user = get_mock_data_item("users.json", id) # 리스트는 get() 사용x --> 새로 만듦
+    user = new_get_mock_data_item("users.json", id)
+    if(user == None):            # 예외처리
+        return "user Get Fail"           
+    return templates.TemplateResponse("user_edit.html", {"request": request, "user" : user})
+
+@app.get("/product_edit/{id}", response_class=HTMLResponse)
+def get_productEdit(request: Request, id: int):
+    product = new_get_mock_data_item("products.json", id)
+    if(product == None):            # 예외처리
+        return "product Get Fail"         
+    return templates.TemplateResponse("product_edit.html", {"request": request, "product" : product})
+
+@app.get("/purchase_edit/{id}", response_class=HTMLResponse)
+def get_purchaseEdit(request: Request, id: int):
+    purchase = new_get_mock_data_item("purchases.json", id)
+    if(purchase == None):            # 예외처리
+        return "purchase Get Fail"
+    return templates.TemplateResponse("purchase_edit.html", {"request": request, "purchase" : purchase})
+
+# 수정
+# HTML 폼(form) 요청이 PUT, DELETE를 지원하지 않는다. 
+# 좀 이상한 방법? --> post로 받아 쿼리에서 method 확인후 put, delete실행
+@app.post("/users/{id}") 
+def put_delete_user(request: Request, id: int, name: str = Form(None), email: str = Form(None)):
+    method = request.query_params.get("_method")
+    if method == "put":
+        newRow = {'id': id, 'name': name, 'email':email}  # 새로 변경할 데이터
+        return new_update_mock_data_item("users.json", id, newRow) # 업데이트
+    elif method == "delete":
+        return new_delete_mock_data_item("users.json", id) # 삭제
+    else:
+        return "method Error!"
+
+@app.post("/products/{id}") 
+def put_delete_product(request: Request, id: int, name: str = Form(None), price: str = Form(None)):
+    method = request.query_params.get("_method")
+    if method == "put":
+        newRow = {'id': id, 'name': name, 'price':price}  # 새로 변경할 데이터
+        return new_update_mock_data_item("products.json", id, newRow) # 업데이트
+    elif method == "delete":
+        return new_delete_mock_data_item("products.json", id) # 삭제
+    else:
+        return "method Error!"
+    
+@app.post("/purchases/{id}") 
+def put_delete_product(request: Request, id: int, user_id: int = Form(None),
+                       product_id: int = Form(None), date: str = Form(None)):
+    method = request.query_params.get("_method")
+    if method == "put":
+        newRow = {'id': id, 'user_id': user_id, 'product_id':product_id, 'date': date}  # 새로 변경할 데이터
+        return new_update_mock_data_item("purchases.json", id, newRow) # 업데이트
+    elif method == "delete":
+        return new_delete_mock_data_item("purchases.json", id) # 삭제
+    else:
+        return "method Error!"
